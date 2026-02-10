@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>持仓整理工具 v3.0</title>
+    
+    <!-- 引入 SheetJS 库用于 Excel 导出功能 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        /* ========== 基础样式重置 ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* ========== 页面整体布局 ========== */
+        body { 
+            font-family: 'Microsoft YaHei', Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* ========== 标题样式 ========== */
+        h1 { 
+            text-align: center; 
+            color: white; 
+            margin-bottom: 20px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+        }
+        
+        /* ========== 卡片样式（主要内容容器） ========== */
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+        }
+        .card h2 { 
+            color: #5a67d8; 
+            margin-bottom: 15px; 
+            font-size: 18px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        /* ========== 表单样式 ========== */
+        .form-row { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+        }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #4a5568; 
+        }
+        .form-group input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            transition: border-color 0.3s; 
+        }
+        .form-group input:focus { border-color: #5a67d8; outline: none; }
+        
+        /* ========== 按钮样式 ========== */
+        button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600; 
+            transition: transform 0.2s, box-shadow 0.2s; 
+        }
+        button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); 
+        }
+        button.secondary { background: linear-gradient(135deg, #38b2ac 0%, #319795 100%); }
+        button.warning { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
+        
+        /* ========== 表格样式 ========== */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+        tr:hover { background: #f7fafc; }
+        
+        /* ========== 步骤指示器样式 ========== */
+        .steps { 
+            display: flex; 
+            justify-content: center; 
+            gap: 0; 
+            margin-bottom: 25px; 
+        }
+        .step { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            padding: 15px 25px; 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            position: relative; 
+        }
+        .step:first-child { border-radius: 25px 0 0 25px; }
+        .step:last-child { border-radius: 0 25px 25px 0; }
+        .step.active { background: white; color: #5a67d8; }
+        .step.completed { background: rgba(56, 178, 172, 0.9); }
+        .step-num { 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            background: currentColor; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+        }
+        .step.active .step-num { background: #5a67d8; color: white; }
+        .step.completed .step-num { background: white; color: #38b2ac; }
+        
+        /* ========== 汇总卡片样式 ========== */
+        .summary { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+        }
+        .summary-item { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            color: white; 
+        }
+        .summary-item .value { font-size: 28px; font-weight: bold; }
+        .summary-item .label { opacity: 0.9; margin-top: 5px; font-size: 14px; }
+        
+        /* ========== 行业分析图表样式 ========== */
+        .industry-chart { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        .industry-bar { margin-bottom: 12px; }
+        .industry-bar .label { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 5px; 
+            font-size: 14px; 
+        }
+        .industry-bar .bar { 
+            height: 24px; 
+            border-radius: 12px; 
+            background: #e2e8f0; 
+            overflow: hidden; 
+        }
+        .industry-bar .fill { 
+            height: 100%; 
+            border-radius: 12px; 
+            transition: width 0.5s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-end; 
+            padding-right: 8px; 
+            color: white; 
+            font-size: 12px; 
+            font-weight: bold; 
+        }
+        
+        /* ========== 产品标签页样式 ========== */
+        .tabs { 
+            display: flex; 
+            gap: 5px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+        }
+        .tab { 
+            padding: 10px 20px; 
+            background: #e2e8f0; 
+            border-radius: 8px 8px 0 0; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: #4a5568; 
+            transition: all 0.3s; 
+        }
+        .tab:hover { background: #cbd5e0; }
+        .tab.active { background: #5a67d8; color: white; }
+        
+        /* ========== 文件上传区域样式 ========== */
+        .upload-area { 
+            border: 3px dashed #cbd5e0; 
+            border-radius: 12px; 
+            padding: 40px; 
+            text-align: center; 
+            transition: all 0.3s; 
+            cursor: pointer; 
+        }
+        .upload-area:hover { border-color: #5a67d8; background: #f7fafc; }
+        .upload-area .icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-area input { display: none; }
+        
+        /* ========== 图片预览网格样式 ========== */
+        .image-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        .image-item { 
+            position: relative; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            cursor: pointer; 
+        }
+        .image-item img { width: 100%; height: 120px; object-fit: cover; }
+        .image-item .name { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: rgba(0,0,0,0.7); 
+            color: white; 
+            padding: 5px; 
+            font-size: 12px; 
+            text-overflow: ellipsis; 
+            overflow: hidden; \n            white-space: nowrap; 
+        }
+        
+        /* ========== 提示框样式 ========== */
+        .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; }
+        .alert-info { background: #ebf8ff; border-left: 4px solid #4299e1; color: #2b6cb0; }
+        .alert-success { background: #f0fff4; border-left: 4px solid #48bb78; color: #276749; }
+        
+        /* ========== 行业分类标签样式（各行业对应不同颜色） ========== */
+        .cat-tag { 
+            display: inline-block; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+        }
+        .cat-美国半导体 { background: #fed7d7; color: #c53030; }
+        .cat-A股半导体 { background: #feebc8; color: #c05621; }
+        .cat-港股FAB { background: #e9d8fd; color: #6b46c1; }
+        .cat-美国算力 { background: #fefcbf; color: #975a16; }
+        .cat-A股算力 { background: #bee3f8; color: #2b6cb0; }
+        .cat-A股资源 { background: #c6f6d5; color: #276749; }
+        .cat-港股资源 { background: #b2f5ea; color: #234e52; }
+        .cat-A股锂电光伏 { background: #faf089; color: #744210; }
+        .cat-互联网 { background: #c4f1f9; color: #086f83; }
+        
+        /* ========== 图片查看器（全屏预览） ========== */
+        .viewer { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.95); 
+            display: none; 
+            z-index: 1000; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .viewer img { max-width: 95%; max-height: 95%;}
+        .viewer .close { 
+            position: absolute; 
+            top: 20px; 
+            right: 30px; 
+            color: white; 
+            font-size: 40px; \n            cursor: pointer; 
+        }
+        
+        /* ========== 行业柱状图颜色（渐变色） ========== */
+        .ind-美国半导体 { background: linear-gradient(90deg, #fc8181, #f56565); }
+        .ind-A股半导体 { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+        .ind-港股FAB { background: linear-gradient(90deg, #b794f4, #9f7aea); }
+        .ind-美国算力 { background: linear-gradient(90deg, #faf089, #ecc94b); }
+        .ind-A股算力 { background: linear-gradient(90deg, #63b3ed, #4299e1); }
+        .ind-A股资源 { background: linear-gradient(90deg, #68d391, #48bb78); }
+        .ind-港股资源 { background: linear-gradient(90deg, #4fd1c5, #38b2ac); }
+        .ind-A股锂电光伏 { background: linear-gradient(90deg, #f6e05e, #ecc94b); }
+        .ind-互联网 { background: linear-gradient(90deg, #76e4f7, #0bc5ea); }
+        
+        /* ========== 响应式布局（移动端适配） ========== */
+        @media (max-width: 768px) {
+            .industry-chart { grid-template-columns: 1fr; }
+            .steps { flex-wrap: wrap; }
+            .step { border-radius: 8px !important; margin: 2px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 持仓整理工具 v3.0</h1>
+        
+        <!-- ========== 步骤指示器 ========== -->
+        <div class="steps">
+            <div class="step active" id="step1"><span class="step-num">1</span> 上传截图</div>
+            <div class="step" id="step2"><span class="step-num">2</span> 输入现金 & 导入数据</div>
+            <div class="step" id="step3"><span class="step-num">3</span> 查看结果</div>
+        </div>
+
+        <!-- ========== 步骤1：上传截图区域 ========== -->
+        <div class="card" id="card1">
+            <h2>📷 第一步：上传持仓截图</h2>
+
+            <!-- 使用流程提示 -->
+            <div class="alert alert-info">
+                <strong>💡 使用流程：</strong> 上传截图预览 → 把截图发给AI助手识别 → AI生成CSV → 导入CSV → 查看结果
+            </div>
+            
+            <div class="form-row">
+                <!-- GT截图上传区域 -->
+                <div class="form-group">
+                    <label>GT截图（1-6号产品）</label>
+                    <div class="upload-area" onclick="document.getElementById('gtInput').click()">
+                        <input type="file" id="gtInput" multiple accept="image/*" onchange="handleUpload(event, 'gt')">
+                        <div class="icon">📤</div>
+                        <div>点击上传GT截图（支持多张）</div>
+                    </div>
+                    <div class="image-grid" id="gtGrid"></div>
+                </div>
+                
+                <!-- TRS截图上传区域 -->
+                <div class="form-group">
+                    <label>TRS截图（1号和2号产品，如有）</label>
+                    <div class="upload-area" onclick="document.getElementById('trsInput').click()">
+                        <input type="file" id="trsInput" multiple accept="image/*" onchange="handleUpload(event, 'trs')">
+                        <div class="icon">📤</div>
+                        <div>点击上传TRS截图</div>
+                    </div>
+                    <div class="image-grid" id="trsGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 步骤2：输入现金 & 导入数据 ========== -->
+        <div class="card" id="card2">
+            <h2>💰 第二步：输入现金 & 导入数据</h2>
+            
+            <!-- 各产品现金输入框 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>1号产品现金(万元)</label>
+                    <input type="number" id="cash1" value="3" step="0.01" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>2号产品现金(万元)</label>
+                    <input type="number" id="cash2" value="140" step="0.01" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>5号产品现金(万元)</label>
+                    <input type="number" id="cash5" value="9" step="0.01" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>6号产品现金(万元)</label>
+                    <input type="number" id="cash6" value="59" step="0.01" onchange="calculate()">
+                </div>
+            </div>
+            
+            <!-- 操作按钮组 -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="secondary" onclick="importCSV()">📥 导入AI识别的CSV</button>
+                <button class="warning" onclick="loadSample()">📋 加载示例数据</button>
+                <button onclick="exportExcel()">📤 导出Excel报表</button>
+            </div>
+            
+            <!-- 隐藏的CSV文件输入框 -->
+            <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="handleCSV(event)">
+        </div>
+
+        <!-- ========== 步骤3：查看结果 ========== -->
+        <div class="card" id="card3">
+            <h2>📈 第三步：查看结果</h2>
+            
+            <!-- 总体汇总统计 -->
+            <h3 style="color:#5a67d8;margin-bottom:15px;">💼 所有产品汇总</h3>
+            <div class="summary" id="summary">
+                <div class="summary-item">
+                    <div class="value" id="totalAssets">0</div>
+                    <div class="label">总资产(万元)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value" id="totalMarket">0</div>
+                    <div class="label">市值合计(万元)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value" id="totalCash">0</div>
+                    <div class="label">现金合计(万元)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value" id="stockCount">0</div>
+                    <div class="label">持仓数量</div>
+                </div>
+            </div>
+            
+            <!-- 行业占比分析区域 -->
+            <h3 style="color:#5a67d8;margin:25px 0 15px;">📊 行业占比分析</h3>
+            <div class="industry-chart">
+                <div id="industryBars"></div>  <!-- 柱状图 -->
+                <div id="industryTable"></div> <!-- 明细表格 -->
+            </div>
+            
+            <!-- 分产品持仓明细 -->
+            <h3 style="color:#5a67d8;margin:25px 0 15px;">📋 分产品持仓明细</h3>
+            
+            <!-- 产品标签页切换 -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('1号')">1号产品</div>
+                <div class="tab" onclick="switchTab('2号')">2号产品</div>
+                <div class="tab" onclick="switchTab('5号')">5号产品</div>
+                <div class="tab" onclick="switchTab('6号')">6号产品</div>
+                <div class="tab" onclick="switchTab('all')">全部汇总</div>
+            </div>
+            
+            <!-- 持仓明细表格容器 -->
+            <div id="holdingsTable"></div>
+        </div>
+    </div>
+
+    <!-- ========== 图片全屏查看器 ========== -->
+    <div class="viewer" id="viewer" onclick="closeViewer()">
+        <span class="close">&times;</span>
+        <img id="viewerImg" src="">
+    </div>
+
+    <script>
+        // ================================================================
+        // 全局变量定义
+        // ================================================================
+        
+        /**
+         * 持仓数据数组
+         * 每条记录格式: { product: '1号', stock: '万里石', value: 4115.10, category: 'A股资源' }
+         */
+        let holdings = [];
+        
+        /**
+         * 当前选中的标签页
+         * 可选值: '1号', '2号', '5号', '6号', 'all'
+         */
+        let currentTab = '1号';
+        
+        /**
+         * 上传的截图数组
+         * 格式: { name: '文件名', src: 'base64编码的图片数据' }
+         */
+        let gtImages = [];   // GT截图
+        let trsImages = [];  // TRS截图
+        
+        // ================================================================
+        // 行业分类配置
+        // ================================================================
+        
+        /**
+         * 股票名称 → 行业分类 映射表
+         * 用于自动识别股票所属行业
+         */
+        const categoryMap = {
+            // 美国半导体
+            '半导体三倍做多': '美国半导体', 
+            'SOXL': '美国半导体', 
+            '英特尔': '美国半导体',
+            
+            // 美国算力
+            'Lumentum控股': '美国算力',
+            
+            // A股半导体
+            '半导体设备ETF': 'A股半导体', 
+            '中微公司': 'A股半导体',
+            
+            // A股算力
+            '润泽科技': 'A股算力', 
+            '胜宏科技': 'A股算力', 
+            '新易盛': 'A股算力', 
+            '中际旭创': 'A股算力',
+            
+            // A股资源
+            '万里石': 'A股资源', 
+            '华联控股': 'A股资源', 
+            '盛屯矿业': 'A股资源', 
+            '杰瑞股份': 'A股资源',
+            
+            // 港股资源
+            '力勤资源': '港股资源', 
+            '中核国际': '港股资源',
+            
+            // A股锂电光伏
+            '先导智能': 'A股锂电光伏',
+            
+            // 港股FAB
+            '中芯国际': '港股FAB',
+            
+            // 互联网
+            '谷歌A': '互联网', 
+            'GGLL': '互联网'
+        };
+        
+        /**
+         * 行业显示顺序（用于排序）
+         */
+        const industryOrder = [
+            'A股资源', 'A股算力', 'A股半导体', 
+            '港股FAB', '港股资源', 
+            '美国半导体', '美国算力', 
+            'A股锂电光伏', '互联网'
+        ];
+
+        // ================================================================
+        // 图片上传与预览功能
+        // ================================================================
+        
+        /**
+         * 处理图片上传
+         * @param {Event} e - 文件输入事件
+         * @param {string} type - 上传类型 ('gt' 或 'trs')
+         */
+        function handleUpload(e, type) {
+            const files = e.target.files;
+            const grid = document.getElementById(type + 'Grid');
+            const arr = type === 'gt' ? gtImages : trsImages;
+            
+            // 清空之前的图片
+            arr.length = 0;
+            grid.innerHTML = '';
+            
+            // 遍历上传的每个文件
+            for (let f of files) {
+                const reader = new FileReader();
+                
+                reader.onload = function(ev) {
+                    // 保存图片数据
+                    arr.push({ name: f.name, src: ev.target.result });
+                    
+                    // 创建预览元素
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    div.innerHTML = `
+                        <img src="${ev.target.result}" onclick="openViewer('${ev.target.result.replace(/'/g, "\\'")}')">
+                        <div class="name">${f.name}</div>
+                    `;
+                    grid.appendChild(div);
+                };
+                
+                // 以 DataURL 格式读取文件
+                reader.readAsDataURL(f);
+            }
+            
+            // 更新步骤指示器状态
+            updateSteps();
+        }
+
+        /**
+         * 打开图片全屏查看器
+         * @param {string} src - 图片的 base64 数据
+         */
+        function openViewer(src) { 
+            document.getElementById('viewerImg').src = src; 
+            document.getElementById('viewer').style.display = 'flex'; 
+        }
+        
+        /**
+         * 关闭图片全屏查看器
+         */
+        function closeViewer() { 
+            document.getElementById('viewer').style.display = 'none'; 
+        }
+
+        // ================================================================
+        // 现金相关计算函数
+        // ================================================================
+        
+        /**
+         * 获取指定产品的现金金额
+         * @param {string} p - 产品编号（如 '1号', '2号'）
+         * @returns {number} 现金金额（万元）
+         */
+        function getCash(p) { 
+            return parseFloat(document.getElementById('cash' + p.replace('号','')).value) || 0; 
+        }
+        
+        /**
+         * 计算所有产品的现金总额
+         * @returns {number} 现金总额（万元）
+         */
+        function getTotalCash() { 
+            return getCash('1号') + getCash('2号') + getCash('5号') + getCash('6号'); 
+        }
+
+        // ================================================================
+        // 核心计算与渲染函数
+        // ================================================================
+        
+        /**
+         * 主计算函数：计算并更新所有统计数据
+         * 在数据变化时调用（导入数据、修改现金等）
+         */
+        function calculate() {
+            // 计算总市值（所有持仓的市值之和）
+            const totalMarket = holdings.reduce((sum, h) => sum + h.value, 0);
+            
+            // 获取现金总额
+            const totalCash = getTotalCash();
+            
+            // 计算总资产
+            const totalAssets = totalMarket + totalCash;
+            
+            // 更新汇总显示
+            document.getElementById('totalAssets').textContent = totalAssets.toFixed(2);
+            document.getElementById('totalMarket').textContent = totalMarket.toFixed(2);
+            document.getElementById('totalCash').textContent = totalCash.toFixed(2);
+            document.getElementById('stockCount').textContent = holdings.length;
+            
+            // 渲染行业占比分析
+            renderIndustry(totalAssets);
+            
+            // 渲染持仓明细表格
+            renderTable();
+            
+            // 更新步骤指示器
+            updateSteps();
+        }
+
+        /**
+         * 渲染行业占比分析
+         * 包括柱状图和明细表格
+         * @param {number} totalAssets - 总资产（万元）
+         */
+        function renderIndustry(totalAssets) {
+            // 按行业汇总市值
+            const indMap = {};
+            holdings.forEach(h => {
+                if (!indMap[h.category]) indMap[h.category] = 0;
+                indMap[h.category] += h.value;
+            });
+            
+            // 添加现金项
+            indMap['现金'] = getTotalCash();
+            
+            // 按市值降序排序
+            const sorted = Object.entries(indMap).sort((a, b) => b[1] - a[1]);
+            
+            // ===== 渲染柱状图 =====
+            let barsHtml = '';
+            sorted.forEach(([ind, val]) => {
+                const pct = totalAssets > 0 ? (val / totalAssets * 100) : 0;
+                const colorClass = ind === '现金' ? '' : 'ind-' + ind;
+                
+                barsHtml += `
+                    <div class="industry-bar">
+                        <div class="label">
+                            <span>${ind}</span>
+                            <span>${val.toFixed(2)}万 (${pct.toFixed(2)}%)</span>
+                        </div>
+                        <div class="bar">
+                            <div class="fill ${colorClass}" style="width:${pct}%">
+                                ${pct > 5 ? pct.toFixed(1) + '%' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('industryBars').innerHTML = barsHtml;
+            
+            // ===== 渲染明细表格 =====
+            let tableHtml = '<table><tr><th>行业分类</th><th>市值(万)</th><th>占比</th></tr>';
+            
+            sorted.forEach(([ind, val]) => {
+                const pct = totalAssets > 0 ? (val / totalAssets * 100) : 0;
+                const tagClass = ind === '现金' ? '' : 'cat-' + ind;
+                
+                tableHtml += `
+                    <tr>
+                        <td><span class="cat-tag ${tagClass}">${ind}</span></td>
+                        <td>${val.toFixed(2)}</td>
+                        <td>${pct.toFixed(2)}%</td>
+                    </tr>
+                `;
+            });
+            
+            // 添加合计行
+            tableHtml += `
+                <tr style="font-weight:bold;background:#f7fafc;">
+                    <td>合计</td>
+                    <td>${totalAssets.toFixed(2)}</td>
+                    <td>100%</td>
+                </tr>
+            </table>`;
+            
+            document.getElementById('industryTable').innerHTML = tableHtml;
+        }
+
+        /**
+         * 切换产品标签页
+         * @param {string} tab - 目标标签页（'1号', '2号', '5号', '6号', 'all'）
+         */
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签页激活状态
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 重新渲染表格
+            renderTable();
+        }
+
+        /**
+         * 渲染持仓明细表格
+         * 根据当前选中的标签页过滤数据
+         */
+        function renderTable() {
+            // 根据当前标签页过滤数据
+            let filtered = currentTab === 'all' 
+                ? [...holdings] 
+                : holdings.filter(h => h.product === currentTab);
+            
+            // 如果是全部汇总，合并同名股票
+            if (currentTab === 'all') {
+                const merged = {};
+                filtered.forEach(h => {
+                    if (!merged[h.stock]) {
+                        merged[h.stock] = { stock: h.stock, value: 0, category: h.category };
+                    }
+                    merged[h.stock].value += h.value;
+                });
+                filtered = Object.values(merged);
+            }
+            
+            // 计算当前视图的现金和总资产
+            const cash = currentTab === 'all' ? getTotalCash() : getCash(currentTab);
+            const totalMarket = filtered.reduce((sum, h) => sum + h.value, 0);
+            const totalAsset = totalMarket + cash;
+            
+            // 构建表格HTML
+            let html = '<table><tr><th>股票名称</th><th>市值(万)</th><th>占比</th><th>行业分类</th></tr>';
+            
+            // 按市值降序排列持仓
+            filtered.sort((a, b) => b.value - a.value).forEach(h => {
+                const pct = totalAsset > 0 ? (h.value / totalAsset * 100).toFixed(2) : 0;
+html += `
+                    <tr>
+                        <td>${h.stock}</td>
+                        <td>${h.value.toFixed(2)}</td>
+                        <td>${pct}%</td>
+                        <td><span class="cat-tag cat-${h.category}">${h.category}</span></td>
+                    </tr>
+                `;
+            });
+            
+            // 添加现金行
+            html += `
+                <tr style="background:#ebf8ff;">
+                    <td>现金</td>
+                    <td>${cash.toFixed(2)}</td>
+                    <td>${totalAsset > 0 ? (cash / totalAsset * 100).toFixed(2) : 0}%</td>
+                    <td>-</td>
+                </tr>
+            `;
+            
+            // 添加合计行
+            html += `
+                <tr style="font-weight:bold;background:#f0fff4;">
+                    <td>合计</td>
+                    <td>${totalAsset.toFixed(2)}</td>
+                    <td>100%</td>
+                    <td>-</td>
+                </tr>
+            </table>`;
+            
+            document.getElementById('holdingsTable').innerHTML = html;
+        }
+
+        /**
+         * 更新步骤指示器状态
+         * 根据当前进度高亮对应步骤
+         */
+        function updateSteps() {
+            const hasImg = gtImages.length > 0 || trsImages.length > 0;
+            const hasData = holdings.length > 0;
+            
+            // 设置各步骤的状态
+            document.getElementById('step1').className = 'step' + (hasImg ? ' completed' : ' active');
+            document.getElementById('step2').className = 'step' + (hasData ? ' completed' : (hasImg ? ' active' : ''));
+            document.getElementById('step3').className = 'step' + (hasData ? ' active' : '');
+        }
+
+        // ================================================================
+        // CSV 导入功能
+        // ================================================================
+        
+        /**
+         * 触发CSV文件选择对话框
+         */
+        function importCSV() { 
+            document.getElementById('csvInput').click(); 
+        }
+        
+        /**
+         * 处理CSV文件导入
+         * CSV格式要求：产品,股票名称,市值(万元),数量,行业分类
+         * @param {Event} e - 文件输入事件
+         */
+        function handleCSV(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(ev) {
+                // 按行分割CSV内容
+                const lines = ev.target.result.split('\n');
+                
+                // 清空现有数据
+                holdings = [];
+                
+                // 从第2行开始解析（跳过表头）
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    
+                    // 验证数据有效性
+                    if (cols.length >= 3 && cols[0] && cols[1] && parseFloat(cols[2])) {
+                        const product = cols[0].trim();       // 产品编号
+                        const stock = cols[1].trim();         // 股票名称
+                        const value = parseFloat(cols[2]);    // 市值
+                        
+                        // 获取行业分类（优先使用CSV中的分类，否则从映射表查找）
+                        let category = cols.length > 4 
+                            ? cols[4].trim() 
+                            : (categoryMap[stock] || 'A股资源');
+                        
+                        // 排除现金和合计行
+                        if (stock !== '现金' && !stock.includes('合计')) {
+                            holdings.push({ product, stock, value, category });
+                        }
+                    }
+                }
+                
+                // 重新计算并渲染
+                calculate();
+                alert('导入成功！共 ' + holdings.length + ' 条记录');
+            };
+            
+            // 以UTF-8编码读取文件
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // ================================================================
+        // 示例数据加载
+        // ================================================================
+        
+        /**
+         * 加载预设的示例数据
+         * 用于演示和测试功能
+         */
+        function loadSample() {
+            holdings = [
+                // ===== 1号产品持仓 =====
+                { product:'1号', stock:'万里石', value:4115.10, category:'A股资源' },
+                { product:'1号', stock:'力勤资源', value:1347.12, category:'港股资源' },
+                { product:'1号', stock:'中际旭创', value:1120.66, category:'A股算力' },
+                { product:'1号', stock:'中芯国际', value:1052.87, category:'港股FAB' },
+                { product:'1号', stock:'半导体三倍做多', value:992.66, category:'美国半导体' },
+                { product:'1号', stock:'半导体设备ETF', value:990.14, category:'A股半导体' },
+                { product:'1号', stock:'盛屯矿业', value:782.13, category:'A股资源' },
+                { product:'1号', stock:'润泽科技', value:703.04, category:'A股算力' },
+                { product:'1号', stock:'GGLL', value:623.70, category:'互联网' },
+                { product:'1号', stock:'胜宏科技', value:616.01, category:'A股算力' },
+                { product:'1号', stock:'华联控股', value:551.52, category:'A股资源' },
+                { product:'1号', stock:'新易盛', value:475.98, category:'A股算力' },
+                { product:'1号', stock:'Lumentum控股', value:397.78, category:'美国算力' },
+                { product:'1号', stock:'先导智能', value:372.96, category:'A股锂电光伏' },
+                { product:'1号', stock:'中核国际', value:280.45, category:'港股资源' },
+                { product:'1号', stock:'中微公司', value:262.81, category:'A股半导体' },
+                { product:'1号', stock:'谷歌A', value:19.70, category:'互联网' },
+                
+                // ===== 2号产品持仓 =====
+                { product:'2号', stock:'万里石', value:1940.56, category:'A股资源' },
+                { product:'2号', stock:'胜宏科技', value:477.61, category:'A股算力' },
+                { product:'2号', stock:'中际旭创', value:464.11, category:'A股算力' },
+                { product:'2号', stock:'盛屯矿业', value:433.58, category:'A股资源' },
+                { product:'2号', stock:'华联控股', value:410.57, category:'A股资源' },
+                { product:'2号', stock:'力勤资源', value:388.47, category:'港股资源' },
+                { product:'2号', stock:'中芯国际', value:387.41, category:'港股FAB' },
+                { product:'2号', stock:'中微公司', value:383.58, category:'A股半导体' },
+                { product:'2号', stock:'润泽科技', value:364.91, category:'A股算力' },
+                { product:'2号', stock:'半导体三倍做多', value:321.94, category:'美国半导体' },
+                { product:'2号', stock:'GGLL', value:283.18, category:'互联网' },
+                { product:'2号', stock:'新易盛', value:280.91, category:'A股算力' },
+                { product:'2号', stock:'杰瑞股份', value:252.60, category:'A股资源' },
+                { product:'2号', stock:'先导智能', value:187.95, category:'A股锂电光伏' },
+                { product:'2号', stock:'Lumentum控股', value:184.97, category:'美国算力' },
+                { product:'2号', stock:'中核国际', value:24.07, category:'港股资源' },
+                
+                // ===== 5号产品持仓 =====
+                { product:'5号', stock:'万里石', value:945.45, category:'A股资源' },
+                { product:'5号', stock:'中际旭创', value:237.72, category:'A股算力' },
+                { product:'5号', stock:'谷歌A', value:215.39, category:'互联网' },
+                { product:'5号', stock:'中芯国际', value:199.95, category:'港股FAB' },
+                { product:'5号', stock:'半导体设备ETF', value:191.48, category:'A股半导体' },
+                { product:'5号', stock:'华联控股', value:150.74, category:'A股资源' },
+                { product:'5号', stock:'润泽科技', value:137.70, category:'A股算力' },
+                { product:'5号', stock:'盛屯矿业', value:132.23, category:'A股资源' },
+                { product:'5号', stock:'半导体三倍做多', value:129.20, category:'美国半导体' },
+                { product:'5号', stock:'杰瑞股份', value:118.93, category:'A股资源' },
+                { product:'5号', stock:'英特尔', value:116.98, category:'美国半导体' },
+                { product:'5号', stock:'新易盛', value:109.24, category:'A股算力' },
+                { product:'5号', stock:'Lumentum控股', value:106.12, category:'美国算力' },
+                { product:'5号', stock:'胜宏科技', value:92.27, category:'A股算力' },
+                { product:'5号', stock:'先导智能', value:73.19, category:'A股锂电光伏' },
+                { product:'5号', stock:'中微公司', value:66.83, category:'A股半导体' },
+                { product:'5号', stock:'中核国际', value:51.48, category:'港股资源' },
+                
+                // ===== 6号产品持仓 =====
+                { product:'6号', stock:'万里石', value:274.09, category:'A股资源' },
+                { product:'6号', stock:'中际旭创', value:62.26, category:'A股算力' },
+                { product:'6号', stock:'中芯国际', value:56.24, category:'港股FAB' },
+                { product:'6号', stock:'半导体设备ETF', value:55.46, category:'A股半导体' },
+                { product:'6号', stock:'盛屯矿业', value:47.83, category:'A股资源' },
+                { product:'6号', stock:'华联控股', value:44.18, category:'A股资源' },
+                { product:'6号', stock:'润泽科技', value:39.78, category:'A股算力' },
+                { product:'6号', stock:'杰瑞股份', value:34.11, category:'A股资源' },
+                { product:'6号', stock:'英特尔', value:33.88, category:'美国半导体' },
+                { product:'6号', stock:'半导体三倍做多', value:32.84, category:'美国半导体' },
+                { product:'6号', stock:'谷歌A', value:27.81, category:'互联网' },
+                { product:'6号', stock:'胜宏科技', value:27.14, category:'A股算力' },
+                { product:'6号', stock:'新易盛', value:27.31, category:'A股算力' },
+                { product:'6号', stock:'Lumentum控股', value:25.72, category:'美国算力' },
+                { product:'6号', stock:'先导智能', value:21.66, category:'A股锂电光伏' },
+                { product:'6号', stock:'中核国际', value:19.03, category:'港股资源' }
+            ];
+            
+            // 重新计算并渲染
+            calculate();
+            alert('示例数据加载成功！');
+        }
+
+        // ================================================================
+        // Excel 导出功能
+        // ================================================================
+        
+        /**
+         * 导出数据到 Excel 文件
+         * 使用 SheetJS 库生成 xlsx 格式文件
+         */
+        function exportExcel() {
+            // 检查是否有数据
+            if (holdings.length === 0) { 
+                alert('请先导入数据'); 
+                return; 
+            }
+            
+            const data = [];
+            
+            // ===== 按产品分组导出 =====
+            ['1号', '2号', '5号', '6号'].forEach(p => {
+                const filtered = holdings.filter(h => h.product === p);
+                if (filtered.length === 0) return;
+                
+                const cash = getCash(p);
+                const total = filtered.reduce((s, h) => s + h.value, 0) + cash;
+                
+                // 添加持仓记录（按市值降序）
+                filtered.sort((a, b) => b.value - a.value).forEach(h => {
+                    data.push({
+                        '产品': p, 
+                        '股票名称': h.stock, 
+                        '市值(万元)': h.value, 
+                        '占比': (h.value / total * 100).toFixed(2) + '%', 
+                        '行业分类': h.category
+                    });
+                });
+                
+                // 添加现金行
+                data.push({
+                    '产品': p, 
+                    '股票名称': '现金', 
+                    '市值(万元)': cash, 
+                    '占比': (cash / total * 100).toFixed(2) + '%', 
+                    '行业分类': '-'
+                });
+                
+                // 添加合计行
+                data.push({
+                    '产品': p, 
+                    '股票名称': '【合计】', 
+                    '市值(万元)': total, 
+                    '占比': '100%', 
+                    '行业分类': '-'
+                });
+                
+                // 添加空行分隔
+                data.push({
+                    '产品': '', 
+                    '股票名称': '', 
+                    '市值(万元)': '', 
+                    '占比': '', 
+                    '行业分类': ''
+                });
+            });
+            
+            // ===== 添加行业汇总 =====
+            data.push({
+                '产品': '【行业汇总】', 
+                '股票名称': '', 
+                '市值(万元)': '', 
+                '占比': '', 
+                '行业分类': ''
+            });
+            
+            const totalAssets = holdings.reduce((s, h) => s + h.value, 0) + getTotalCash();
+            
+            // 按行业汇总
+            const indMap = {};
+            holdings.forEach(h => { 
+                indMap[h.category] = (indMap[h.category] || 0) + h.value; 
+            });
+            indMap['现金'] = getTotalCash();
+            
+            // 按市值降序输出
+            Object.entries(indMap).sort((a, b) => b[1] - a[1]).forEach(([ind, val]) => {
+                data.push({
+                    '产品': '', 
+                    '股票名称': ind, 
+                    '市值(万元)': val, 
+                    '占比': (val / totalAssets * 100).toFixed(2) + '%', 
+                    '行业分类': ''
+                });
+            });
+            
+            // ===== 使用 SheetJS 生成 Excel 文件 =====
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '持仓汇总');
+            
+            // 生成文件名（包含日期）
+            const fileName = `持仓汇总_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert('Excel报表已导出！');
+        }
+
+        // ================================================================
+        // 事件监听器
+        // ================================================================
+        
+        // ESC 键关闭图片查看器
+        document.addEventListener('keydown', e => { 
+            if (e.key === 'Escape') closeViewer(); 
+        });
+        
+        // ================================================================
+        // 页面初始化
+        // ================================================================
+        
+        // 页面加载完成后执行初始计算
+        calculate();
+    </script>
+</body>
+</html>
