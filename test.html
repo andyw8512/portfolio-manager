@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>测试 OCR 流程</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🧪 OCR 流程测试</h1>
+
+    <div class="test-section">
+        <h3>步骤1: 测试图片上传</h3>
+        <input type="file" id="testInput" accept="image/*" multiple>
+        <button onclick="testUpload()">测试上传</button>
+        <div id="uploadResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>步骤2: 测试 API Key</h3>
+        <input type="password" id="testApiKey" placeholder="输入API Key" style="padding: 8px; width: 300px;">
+        <button onclick="testApiKey()">测试API Key</button>
+        <div id="apiKeyResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>步骤3: 测试 OCR API</h3>
+        <button onclick="testOCRAPI()">测试后端连接</button>
+        <div id="ocrApiResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>步骤4: 完整流程测试</h3>
+        <button onclick="runFullTest()">运行完整测试</button>
+        <div id="fullTestResult" class="log"></div>
+    </div>
+
+    <script>
+        let testImages = [];
+        let testLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            testLog.push(entry);
+            console.log(entry);
+        }
+
+        function displayLog(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const colorClass = type === 'success' ? 'success' : (type === 'error' ? 'error' : 'info');
+            el.innerHTML += `<div class="${colorClass}">${message}</div>`;
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function testUpload() {
+            clearLog('uploadResult');
+            testImages = [];
+
+            const input = document.getElementById('testInput');
+            if (input.files.length === 0) {
+                displayLog('uploadResult', '❌ 请先选择图片文件', 'error');
+                return;
+            }
+
+            log(`开始上传 ${input.files.length} 个文件`);
+
+            try {
+                for (let f of input.files) {
+                    displayLog('uploadResult', `📁 读取文件: ${f.name}`);
+
+                    const result = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = (e) => reject(e);
+                        reader.readAsDataURL(f);
+                    });
+
+                    testImages.push({ name: f.name, src: result });
+                    displayLog('uploadResult', `✅ 文件已读取: ${f.name} (${result.length} 字符)`, 'success');
+                }
+
+                displayLog('uploadResult', `<strong>✅ 上传完成！共 ${testImages.length} 个文件</strong>`, 'success');
+                log(`上传完成，testImages.length = ${testImages.length}`);
+            } catch (error) {
+                displayLog('uploadResult', `❌ 错误: ${error.message}`, 'error');
+                log(`上传失败: ${error.message}`);
+            }
+        }
+
+        function testApiKey() {
+            clearLog('apiKeyResult');
+            const apiKey = document.getElementById('testApiKey').value.trim();
+
+            if (!apiKey) {
+                displayLog('apiKeyResult', '❌ API Key 为空', 'error');
+                log('API Key 为空');
+                return;
+            }
+
+            log(`API Key 长度: ${apiKey.length}`);
+            displayLog('apiKeyResult', `✅ API Key 已输入 (长度: ${apiKey.length})`, 'success');
+        }
+
+        async function testOCRAPI() {
+            clearLog('ocrApiResult');
+            displayLog('ocrApiResult', '🔄 测试后端连接...');
+
+            log('测试后端连接');
+
+            try {
+                const response = await fetch('http://localhost:3001/health');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayLog('ocrApiResult', `✅ 后端连接成功: ${JSON.stringify(data)}`, 'success');
+                log('后端连接成功');
+            } catch (error) {
+                displayLog('ocrApiResult', `❌ 后端连接失败: ${error.message}`, 'error');
+                log(`后端连接失败: ${error.message}`);
+            }
+        }
+
+        async function runFullTest() {
+            clearLog('fullTestResult');
+            log('=== 开始完整流程测试 ===');
+
+            // 1. 测试图片上传
+            displayLog('fullTestResult', '<strong>步骤1: 测试图片上传</strong>');
+
+            const input = document.getElementById('testInput');
+            if (input.files.length === 0) {
+                displayLog('fullTestResult', '❌ 请先选择图片文件', 'error');
+                log('测试失败: 没有选择文件');
+                return;
+            }
+
+            try {
+                for (let f of input.files) {
+                    displayLog('fullTestResult', `📁 读取文件: ${f.name}`);
+
+                    const result = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = (e) => reject(e);
+                        reader.readAsDataURL(f);
+                    });
+
+                    testImages.push({ name: f.name, src: result });
+                    displayLog('fullTestResult', `✅ 文件已读取`, 'success');
+                }
+
+                log(`上传完成，testImages.length = ${testImages.length}`);
+
+                // 2. 检查 API Key
+                displayLog('fullTestResult', '<strong>步骤2: 检查 API Key</strong>');
+
+                const apiKey = document.getElementById('testApiKey').value.trim();
+                if (!apiKey) {
+                    displayLog('fullTestResult', '❌ API Key 为空', 'error');
+                    log('测试失败: API Key 为空');
+                    return;
+                }
+
+                displayLog('fullTestResult', `✅ API Key 已输入 (长度: ${apiKey.length})`, 'success');
+                log(`API Key 长度: ${apiKey.length}`);
+
+                // 3. 测试 OCR API 调用
+                displayLog('fullTestResult', '<strong>步骤3: 测试 OCR API 调用</strong>');
+
+                const testImg = testImages[0];
+                displayLog('fullTestResult', `🔄 调用 OCR API: ${testImg.name}`);
+
+                try {
+                    const response = await fetch('http://localhost:3001/api/ocr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image: testImg.src,
+                            apiKey: apiKey
+                        })
+                    });
+
+                    displayLog('fullTestResult', `🔄 HTTP 状态: ${response.status}`);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    displayLog('fullTestResult', `✅ OCR 调用成功！返回数据大小: ${JSON.stringify(result).length} 字符`, 'success');
+                    displayLog('fullTestResult', `📄 返回数据预览: ${JSON.stringify(result).substring(0, 200)}...`, 'info');
+                    log(`OCR 调用成功`);
+
+                    displayLog('fullTestResult', `<strong>🎉 完整流程测试通过！</strong>`, 'success');
+                    log('=== 完整流程测试完成 ===');
+
+                } catch (error) {
+                    displayLog('fullTestResult', `❌ OCR API 调用失败: ${error.message}`, 'error');
+                    log(`OCR 调用失败: ${error.message}`);
+                }
+
+            } catch (error) {
+                displayLog('fullTestResult', `❌ 测试失败: ${error.message}`, 'error');
+                log(`测试失败: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

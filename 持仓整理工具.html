@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>持仓整理工具 v3.0</title>
+    <title>持仓整理工具 v1.1</title>
     
     <!-- 引入 SheetJS 库用于 Excel 导出功能 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -94,6 +94,10 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         th { background: #f7fafc; font-weight: 600; color: #4a5568; }
         tr:hover { background: #f7fafc; }
+        .category-input { width: 100%; min-width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
+        .category-input:focus { border-color: #5a67d8; outline: none; }
+        .market-select { width: 100%; min-width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; cursor: pointer; }
+        .market-select:focus { border-color: #5a67d8; outline: none; }
         
         /* ========== 步骤指示器样式 ========== */
         .steps { 
@@ -172,9 +176,10 @@
             align-items: center; 
             justify-content: flex-end; 
             padding-right: 8px; 
-            color: white; 
+            color: #fff; 
             font-size: 12px; 
             font-weight: bold; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
         /* ========== 产品标签页样式 ========== */
@@ -233,7 +238,8 @@
             padding: 5px; 
             font-size: 12px; 
             text-overflow: ellipsis; 
-            overflow: hidden; \n            white-space: nowrap; 
+            overflow: hidden;
+            white-space: nowrap; 
         }
         
         /* ========== 提示框样式 ========== */
@@ -273,24 +279,110 @@
             align-items: center; 
         }
         .viewer img { max-width: 95%; max-height: 95%;}
-        .viewer .close { 
-            position: absolute; 
-            top: 20px; 
-            right: 30px; 
-            color: white; 
-            font-size: 40px; \n            cursor: pointer; 
+        .viewer .close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
         }
+
+        /* ========== OCR相关样式 ========== */
+        .ocr-controls {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        .ocr-input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .ocr-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+        }
+        .ocr-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .ocr-input input:focus {
+            border-color: #5a67d8;
+            outline: none;
+        }
+        .ocr-progress {
+            display: none;
+            padding: 10px;
+            background: #ebf8ff;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #2b6cb0;
+        }
+        .ocr-progress.active {
+            display: block;
+        }
+        .ocr-result {
+            display: none;
+            padding: 15px;
+            background: #f0fff4;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #48bb78;
+        }
+        .ocr-result.active {
+            display: block;
+        }
+        .ocr-result pre {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .ocr-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .ocr-btn-recognize {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        .ocr-btn-recognize:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        /* ========== 行业柱状图：预设类名颜色（备用） ========== */
+        .ind-美国半导体 { background: linear-gradient(90deg, #dc2626, #b91c1c); }
+        .ind-A股半导体 { background: linear-gradient(90deg, #ea580c, #c2410c); }
+        .ind-港股FAB { background: linear-gradient(90deg, #7c3aed, #6d28d9); }
+        .ind-美国算力 { background: linear-gradient(90deg, #ca8a04, #a16207); }
+        .ind-A股算力 { background: linear-gradient(90deg, #2563eb, #1d4ed8); }
+        .ind-A股资源 { background: linear-gradient(90deg, #059669, #047857); }
+        .ind-港股资源 { background: linear-gradient(90deg, #0d9488, #0f766e); }
+        .ind-A股锂电光伏 { background: linear-gradient(90deg, #d97706, #b45309); }
+        .ind-互联网 { background: linear-gradient(90deg, #0891b2, #0e7490); }
         
-        /* ========== 行业柱状图颜色（渐变色） ========== */
-        .ind-美国半导体 { background: linear-gradient(90deg, #fc8181, #f56565); }
-        .ind-A股半导体 { background: linear-gradient(90deg, #f6ad55, #ed8936); }
-        .ind-港股FAB { background: linear-gradient(90deg, #b794f4, #9f7aea); }
-        .ind-美国算力 { background: linear-gradient(90deg, #faf089, #ecc94b); }
-        .ind-A股算力 { background: linear-gradient(90deg, #63b3ed, #4299e1); }
-        .ind-A股资源 { background: linear-gradient(90deg, #68d391, #48bb78); }
-        .ind-港股资源 { background: linear-gradient(90deg, #4fd1c5, #38b2ac); }
-        .ind-A股锂电光伏 { background: linear-gradient(90deg, #f6e05e, #ecc94b); }
-        .ind-互联网 { background: linear-gradient(90deg, #76e4f7, #0bc5ea); }
+        /* ========== 市场占比饼图 ========== */
+        .market-pie-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
+        .market-pie-chart { width: 180px; height: 180px; border-radius: 50%; flex-shrink: 0; }
+        .market-pie-legend { display: flex; flex-direction: column; gap: 8px; }
+        .market-pie-legend span { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+        .market-pie-legend .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
         
         /* ========== 响应式布局（移动端适配） ========== */
         @media (max-width: 768px) {
@@ -302,7 +394,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 持仓整理工具 v3.0</h1>
+        <h1>📊 持仓整理工具 v1.1</h1>
         
         <!-- ========== 步骤指示器 ========== -->
         <div class="steps">
@@ -315,33 +407,50 @@
         <div class="card" id="card1">
             <h2>📷 第一步：上传持仓截图</h2>
 
-            <!-- 使用流程提示 -->
-            <div class="alert alert-info">
-                <strong>💡 使用流程：</strong> 上传截图预览 → 把截图发给AI助手识别 → AI生成CSV → 导入CSV → 查看结果
+            <!-- OCR 引擎：MiniMax / Gemini / OpenAI，选 Gemini 或 OpenAI 时可填写 API Key -->
+            <div class="ocr-controls" style="margin-bottom:12px;">
+                <div class="ocr-input">
+                    <label>OCR 引擎</label>
+                    <select id="ocrProvider" onchange="toggleOcrKeyBlocks()" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:6px;font-size:14px;">
+                        <option value="minimax">MiniMax 国际站</option>
+                        <option value="gemini">Gemini (1.5 Flash)</option>
+                        <option value="openai">OpenAI (GPT-4o mini)</option>
+                    </select>
+                </div>
+                <div class="ocr-input" id="geminiKeyBlock" style="display:none;">
+                    <label>Gemini API Key（可选，不填则用后端默认）</label>
+                    <input type="password" id="geminiApiKey" placeholder="AIza... 不填则用服务端配置">
+                </div>
+                <div class="ocr-input" id="openaiKeyBlock" style="display:none;">
+                    <label>OpenAI API Key（可选，不填则用服务端已配置的 Key）</label>
+                    <input type="password" id="openaiApiKey" placeholder="sk-... 不填则用服务端配置">
+                </div>
             </div>
-            
-            <div class="form-row">
-                <!-- GT截图上传区域 -->
-                <div class="form-group">
-                    <label>GT截图（1-6号产品）</label>
-                    <div class="upload-area" onclick="document.getElementById('gtInput').click()">
-                        <input type="file" id="gtInput" multiple accept="image/*" onchange="handleUpload(event, 'gt')">
-                        <div class="icon">📤</div>
-                        <div>点击上传GT截图（支持多张）</div>
-                    </div>
-                    <div class="image-grid" id="gtGrid"></div>
+
+            <!-- OCR进度提示 -->
+            <div class="ocr-progress" id="ocrProgress">
+                正在进行OCR识别，请稍候...
+            </div>
+
+            <!-- OCR识别结果（隐藏，自动使用） -->
+            <div class="ocr-result" id="ocrResult" style="display:none;"></div>
+
+            <div class="alert alert-info">
+                <strong>💡 使用流程：</strong> 上传截图（GT/TRS 均可，自动识别）→ 点击「开始计算」
+            </div>
+
+            <div class="form-group">
+                <label>上传截图</label>
+                <div class="upload-area" onclick="document.getElementById('screenshotInput').click()">
+                    <input type="file" id="screenshotInput" multiple accept="image/*" onchange="handleUploadAsync(event)">
+                    <div class="icon">📤</div>
+                    <div>点击上传截图（GT / TRS 均可，自动识别表头并汇总）</div>
                 </div>
-                
-                <!-- TRS截图上传区域 -->
-                <div class="form-group">
-                    <label>TRS截图（1号和2号产品，如有）</label>
-                    <div class="upload-area" onclick="document.getElementById('trsInput').click()">
-                        <input type="file" id="trsInput" multiple accept="image/*" onchange="handleUpload(event, 'trs')">
-                        <div class="icon">📤</div>
-                        <div>点击上传TRS截图</div>
-                    </div>
-                    <div class="image-grid" id="trsGrid"></div>
-                </div>
+                <div class="image-grid" id="screenshotGrid"></div>
+            </div>
+
+            <div style="text-align:center;margin-top:20px;">
+                <button onclick="startCalculation()" style="font-size:18px;padding:15px 40px;">🚀 开始计算</button>
             </div>
         </div>
 
@@ -369,14 +478,7 @@
                 </div>
             </div>
             
-            <!-- 操作按钮组 -->
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <button class="secondary" onclick="importCSV()">📥 导入AI识别的CSV</button>
-                <button class="warning" onclick="loadSample()">📋 加载示例数据</button>
-                <button onclick="exportExcel()">📤 导出Excel报表</button>
-            </div>
-            
-            <!-- 隐藏的CSV文件输入框 -->
+            <!-- 隐藏的CSV文件输入框（供后台逻辑使用） -->
             <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="handleCSV(event)">
         </div>
 
@@ -389,21 +491,26 @@
             <div class="summary" id="summary">
                 <div class="summary-item">
                     <div class="value" id="totalAssets">0</div>
-                    <div class="label">总资产(万元)</div>
+                    <div class="label">总资产(万元人民币)</div>
                 </div>
                 <div class="summary-item">
                     <div class="value" id="totalMarket">0</div>
-                    <div class="label">市值合计(万元)</div>
+                    <div class="label">市值合计(万元人民币)</div>
                 </div>
                 <div class="summary-item">
                     <div class="value" id="totalCash">0</div>
-                    <div class="label">现金合计(万元)</div>
+                    <div class="label">现金合计(万元人民币)</div>
                 </div>
                 <div class="summary-item">
                     <div class="value" id="stockCount">0</div>
                     <div class="label">持仓数量</div>
                 </div>
             </div>
+            <p id="rateHint" style="margin-top:8px;font-size:12px;color:#718096;"></p>
+            
+            <!-- 市场占比饼图 -->
+            <h3 style="color:#5a67d8;margin:25px 0 15px;">📈 市场占比</h3>
+            <div id="marketPieWrap" class="market-pie-wrap"></div>
             
             <!-- 行业占比分析区域 -->
             <h3 style="color:#5a67d8;margin:25px 0 15px;">📊 行业占比分析</h3>
@@ -456,13 +563,424 @@
          * 上传的截图数组
          * 格式: { name: '文件名', src: 'base64编码的图片数据' }
          */
-        let gtImages = [];   // GT截图
-        let trsImages = [];  // TRS截图
-        
+        let screenshotImages = [];   // 上传的截图（GT/TRS 混合，解析时按表头自动识别）
+
+        /**
+         * OCR识别结果缓存
+         */
+        let ocrHoldings = [];  // OCR识别到的持仓数据
+        let currentRecognizingIndex = 0;  // 当前正在识别的图片索引
+        let allImagesForOCR = [];  // 所有需要识别的图片数组
+
+        /** OCR 后端地址：同域名（含公网部署）用空；本机用其他端口打开页面时指向 3011 */
+        const OCR_BASE_URL = (window.location.hostname === 'localhost' && window.location.port !== '3011') ? 'http://localhost:3011' : '';
+        // TRS 汇总统一为人民币(万元)：港股(港元)、美股(美元)按实时汇率换算，计算前拉取
+        let RATE_USD_CNY = 7.24;
+        let RATE_HKD_CNY = 0.92;
+
+        /**
+         * 拉取实时汇率（美元/港币 → 人民币），失败时保留当前值
+         * 使用 open.er-api.com 免费接口（无需 key）
+         */
+        async function fetchExchangeRates() {
+            try {
+                const r = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (!r.ok) return;
+                const j = await r.json();
+                if (j.rates && j.rates.CNY != null && j.rates.HKD != null && j.rates.HKD > 0) {
+                    RATE_USD_CNY = j.rates.CNY;
+                    RATE_HKD_CNY = j.rates.CNY / j.rates.HKD;
+                    return { usd: RATE_USD_CNY, hkd: RATE_HKD_CNY };
+                }
+            } catch (e) {
+                console.warn('实时汇率获取失败，使用默认汇率', e);
+            }
+            return null;
+        }
+
         // ================================================================
-        // 行业分类配置
+        // 初始化相关
         // ================================================================
-        
+
+        // ================================================================
+        // OCR 识别（与 image-to-excel 一致：仅传图片，Key 后端内置）
+        // ================================================================
+
+        /**
+         * 检查 OCR 服务是否为新版（避免连到旧版后端）
+         */
+        async function checkOcrService() {
+            try {
+                const r = await fetch(`${OCR_BASE_URL}/api/version`);
+                if (!r.ok) throw new Error('version check failed');
+                const data = await r.json();
+                if (data.version < 2) throw new Error('请使用新版 server.js（支持 version 2+）');
+                return true;
+            } catch (e) {
+                throw new Error('无法连接本地服务。\n\n若已双击桌面「portfolio-manager.exe」启动，请稍等几秒后按 Ctrl+F5 刷新本页。\n\n否则请先启动服务：在本机打开终端，进入项目目录，执行 node server.js，等出现「端口: 3011」后再刷新本页。');
+            }
+        }
+
+        /**
+         * 请求通知权限并弹出浏览器系统通知（OCR 完成后提示）
+         */
+        function showOcrCompleteNotification() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                new Notification('持仓整理工具', { body: '数据读取完毕', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2348bb78"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(p => {
+                    if (p === 'granted') new Notification('持仓整理工具', { body: '数据读取完毕', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2348bb78"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' });
+                });
+            }
+        }
+
+        /**
+         * 开始计算：上传截图 → OCR → 解析 → 计算汇总
+         * @param {Object} [opts] - { thenExportExcel: true } 表示识别完成后直接导出 Excel
+         */
+        async function startCalculation() {
+            if (screenshotImages.length === 0) {
+                alert('请先上传持仓截图！');
+                return;
+            }
+
+            try {
+                await checkOcrService();
+            } catch (e) {
+                alert(e.message);
+                return;
+            }
+
+            document.getElementById('ocrProgress').classList.add('active');
+            document.getElementById('ocrProgress').textContent = '正在获取实时汇率...';
+            await fetchExchangeRates();
+            const rateHint = document.getElementById('rateHint');
+            if (rateHint) rateHint.textContent = `汇率: 1美元≈${RATE_USD_CNY.toFixed(2)}元 1港币≈${RATE_HKD_CNY.toFixed(2)}元`;
+
+            allImagesForOCR = screenshotImages.map(img => ({ ...img, type: 'auto' }));
+            ocrHoldings = [];
+
+            for (let i = 0; i < allImagesForOCR.length; i++) {
+                const img = allImagesForOCR[i];
+                document.getElementById('ocrProgress').textContent =
+                    `正在识别 (${i + 1}/${allImagesForOCR.length}): ${img.name}...`;
+                try {
+                    const result = await recognizeImage(img.src);
+                    const parsed = parseOCRResult(result, 'auto');
+                    ocrHoldings.push(...parsed);
+                } catch (error) {
+                    console.error(`识别失败: ${img.name}`, error);
+                    document.getElementById('ocrProgress').classList.remove('active');
+                    alert(`识别失败: ${img.name}\n${error.message || 'OCR识别失败'}`);
+                    return;
+                }
+            }
+
+            document.getElementById('ocrProgress').classList.remove('active');
+            if (ocrHoldings.length === 0) {
+                alert('未识别到持仓数据，请检查截图质量或尝试手动导入。\n\n若截图为表格，请确保每行格式为：股票名称 + 空格/制表符 + 市值数字。\n按 F12 打开控制台可查看本次识别的原始文本。');
+                return;
+            }
+
+            holdings = [...ocrHoldings];
+            // 1号产品同一股票可能分布在两个账户，按股票名称加总市值
+            const oneNo = holdings.filter(h => h.product === '1号');
+            const others = holdings.filter(h => h.product !== '1号');
+            const merged1 = [];
+            const byStock = {};
+            oneNo.forEach(h => {
+                if (!byStock[h.stock]) byStock[h.stock] = { stock: h.stock, value: 0, category: h.category, marketOverride: h.marketOverride, exchange: h.exchange };
+                byStock[h.stock].value += h.value;
+            });
+            Object.values(byStock).forEach(o => merged1.push({ product: '1号', stock: o.stock, value: o.value, category: o.category, marketOverride: o.marketOverride, exchange: o.exchange }));
+            holdings = [...merged1, ...others];
+            calculate();
+
+            showOcrCompleteNotification();
+
+            document.getElementById('card2').scrollIntoView({ behavior: 'smooth' });
+            alert(`计算完成！成功导入 ${ocrHoldings.length} 条持仓数据`);
+        }
+
+        function toggleOcrKeyBlocks() {
+            const p = document.getElementById('ocrProvider').value;
+            document.getElementById('geminiKeyBlock').style.display = p === 'gemini' ? 'block' : 'none';
+            document.getElementById('openaiKeyBlock').style.display = p === 'openai' ? 'block' : 'none';
+        }
+
+        /**
+         * 识别单张图片（支持 MiniMax / Gemini / OpenAI，按当前选择的引擎传参）
+         */
+        async function recognizeImage(image) {
+            const provider = document.getElementById('ocrProvider').value;
+            const body = { image, provider };
+            if (provider === 'gemini') {
+                const key = document.getElementById('geminiApiKey').value.trim();
+                if (key) body.apiKey = key;
+            } else if (provider === 'openai') {
+                const key = document.getElementById('openaiApiKey').value.trim();
+                if (key) body.apiKey = key;
+            }
+            let response;
+            try {
+                response = await fetch(`${OCR_BASE_URL}/api/ocr`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            } catch (e) {
+                const msg = (e && e.message) || String(e);
+                if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('load failed')) {
+                    throw new Error('无法连接 OCR 服务，请确认已启动 server.js（端口 3011）');
+                }
+                throw e;
+            }
+            if (!response.ok) {
+                let errorMsg = 'OCR识别失败';
+                try {
+                    const errBody = await response.json();
+                    errorMsg = errBody.error || errorMsg;
+                } catch (_) {}
+                throw new Error(errorMsg);
+            }
+            const result = await response.json();
+            return result.data;
+        }
+
+        /**
+         * 解析OCR识别结果，从识别文本中提取持仓（产品、名称、市值）。
+         * - TRS：表头 账户名称/标的名称/持仓市值 等，数据行与表头列对齐，持仓市值为元(÷10000)。
+         * - GT：表头 产品名称/市值/名称 等，OCR 常在数据行前多一列行号(1/2/3…)，解析时用 rowOffset 对齐。
+         * @param {Object} ocrData - OCR 返回，如 { content: "..." }
+         * @param {string} type - 'auto'
+         * @returns {Array} { product, stock, value, category }[]
+         */
+        function parseOCRResult(ocrData, type) {
+            const holdings = [];
+
+            try {
+                // OCR 返回与 image-to-excel 一致：data.content 为识别文本（MiniMax）
+                let text = '';
+                if (ocrData.content) {
+                    text = String(ocrData.content);
+                } else if (ocrData.words_result && Array.isArray(ocrData.words_result)) {
+                    text = ocrData.words_result.map(w => w.words || '').join('\n');
+                } else if (ocrData.text) {
+                    text = String(ocrData.text);
+                } else if (ocrData.data && ocrData.data.content) {
+                    text = String(ocrData.data.content);
+                } else {
+                    text = typeof ocrData === 'string' ? ocrData : JSON.stringify(ocrData);
+                }
+                // 若为 Markdown 表格（| 分隔），先转为 Tab 分隔便于统一解析
+                if (text.includes('|') && text.includes('\n')) {
+                    text = text.split(/\r?\n/).map(l => {
+                        const t = l.trim();
+                        if (!t || !t.includes('|')) return t;
+                        return t.replace(/\|\s*/g, '\t').replace(/^\t|\t$/g, '');
+                    }).join('\n');
+                }
+
+                // 解析持仓信息：支持「股票 市值」、Tab 分隔、产品行等
+                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                let currentProduct = '1号';
+
+                // 多列表格：根据表头动态识别名称/代码/市值/交易所列（兼容 GT 与 TRS）
+                let idxName = 3, idxCode = 2, idxValue = 11, idxProduct = -1, idxExchange = -1, valueColumnInYuan = true, headerDetected = false;
+                const detectHeader = (parts) => {
+                    const nameKeys = ['标的名称', '股票名称', '名称', '名 称', '三一名称'];
+                    const codeKeys = ['标的代码', '代码'];
+                    const productKeys = ['产品名称', '产品', '账户名称'];
+                    const exchangeKeys = ['交易所', '交易品种'];
+                    const valKeysYuan = ['持仓市值'];
+                    const valKeys = ['持仓市值', '市值', '市值(万)', '市值（万）', '市 值'];
+                    let iName = parts.findIndex(p => nameKeys.includes(String(p).trim()));
+                    if (iName < 0) iName = parts.findIndex(p => /名称/.test(String(p)));
+                    const iCode = parts.findIndex(p => codeKeys.includes(String(p).trim()));
+                    const iVal = parts.findIndex(p => valKeys.includes(String(p).trim()));
+                    const iProd = parts.findIndex(p => productKeys.includes(String(p).trim()));
+                    const iEx = parts.findIndex(p => exchangeKeys.includes(String(p).trim()));
+                    if (iName >= 0 && iVal >= 0) {
+                        idxName = iName; idxValue = iVal;
+                        if (iCode >= 0) idxCode = iCode;
+                        if (iProd >= 0) idxProduct = iProd;
+                        if (iEx >= 0) idxExchange = iEx;
+                        valueColumnInYuan = valKeysYuan.includes(parts[iVal]) || (iProd >= 0 && parts[iVal] === '市值');
+                        headerDetected = true;
+                        return true;
+                    }
+                    return false;
+                };
+                const toWanCNY = (valueLocal, exchangeCell) => {
+                    const s = String(exchangeCell || '').trim();
+                    if (/港交所|港股/.test(s)) return (valueLocal * RATE_HKD_CNY) / 10000;
+                    if (/纳交所|纽交所|美股/.test(s)) return (valueLocal * RATE_USD_CNY) / 10000;
+                    return valueLocal / 10000;
+                };
+                const parseProductFromCell = (cell) => {
+                    if (cell == null || String(cell).trim() === '') return null;
+                    const s = String(cell).trim();
+                    const m1 = s.match(/(\d号)/);
+                    if (m1) return m1[1];
+                    const m2 = s.match(/(\d)\s*号?/);
+                    if (m2) return m2[1] + '号';
+                    return null;
+                };
+                const isGTProductCell = (p) => /汇宽天翼/.test(String(p)) && /\d/.test(String(p));
+
+                lines.forEach(line => {
+                    // 尝试匹配产品编号：1号产品、产品1号、产品1、或单独一行的 1号/2号
+                    const productMatch = line.match(/(\d号)产品|产品(\d号)|产品(\d)|^(\d号)\s*$/);
+                    if (productMatch) {
+                        const raw = productMatch[1] || productMatch[2] || productMatch[4] || (productMatch[3] ? productMatch[3] + '号' : '');
+                        currentProduct = (raw || '').trim() || currentProduct;
+                        return;
+                    }
+
+                    let stock = '';
+                    let value = NaN;
+                    let exchangeCell = '';
+
+                    // 统一按「列」解析：Tab 或 空格分列（GT 表 OCR 常为单空格，TRS 常为 Tab）
+                    const parts = line.includes('\t')
+                        ? line.split('\t').map(p => p.trim())
+                        : line.split(/\s+/).map(p => p.trim()).filter(Boolean);
+
+                    if (parts.length >= 2) {
+                        if (detectHeader(parts)) return;
+                        const canUseDetectedColumns = headerDetected && parts.length > idxValue && (parts[idxName] != null);
+                        if (parts.length >= 12 || canUseDetectedColumns) {
+                            // 【重要】OCR/GT 表常在第一列输出行号(1/2/3…)，表头无此行号，导致数据行与表头错位一列。
+                            // 若首列为纯数字则视为行号，列下标整体 +1，否则与表头对齐。
+                            const rowOffset = (parts.length > idxValue + 1 && /^\d+$/.test(String(parts[0]).trim())) ? 1 : 0;
+                            const colName = (parts[idxName + rowOffset] || '').trim();
+                            const colCode = (parts[idxCode + rowOffset] != null ? parts[idxCode + rowOffset] : '').trim();
+                            const colValue = parts[idxValue + rowOffset];
+                            const isHeaderCell = ['标的名称','股票名称','名称','名 称','三一名称','持仓市值','市值','市 值','市值(万)','市值（万）','资金账号','产品名称','产品','账户名称','持仓净值占比'].includes(colName) || ['持仓市值','市值','市 值'].includes(String(colValue));
+                            if (colName && !isHeaderCell && colValue !== '' && colValue != null) {
+                                let productFromRow = idxProduct >= 0 ? parseProductFromCell(parts[idxProduct + rowOffset]) : null;
+                                if (!productFromRow) {
+                                    for (let i = 0; i < parts.length; i++) {
+                                        productFromRow = parseProductFromCell(parts[i]);
+                                        if (productFromRow) break;
+                                    }
+                                }
+                                if (productFromRow) currentProduct = productFromRow;
+                                stock = (/^\d+$/.test(colName) && colCode && /[A-Za-z.]/.test(colCode)) ? colCode : colName;
+                                if (idxExchange >= 0 && parts[idxExchange + rowOffset] != null) exchangeCell = String(parts[idxExchange + rowOffset]).trim();
+                                const rawVal = parseFloat(String(colValue).replace(/,/g, '').replace(/[\s%]/g, ''));
+                                if (idxExchange >= 0 && (valueColumnInYuan || rawVal > 100000)) {
+                                    value = toWanCNY(rawVal, parts[idxExchange + rowOffset]);
+                                } else if (valueColumnInYuan || rawVal > 100000) {
+                                    value = rawVal / 10000;
+                                } else {
+                                    value = rawVal;
+                                }
+                            }
+                        } else if (parts.length >= 5) {
+                            // GT 表回退：任意行含「汇宽天翼+数字」或「X号」则按 产品名, 市值, 名称 列序解析（无表头或表头未识别时）
+                            const gtProductIdx = parts.findIndex(p => isGTProductCell(p));
+                            const anyProductIdx = gtProductIdx >= 0 ? gtProductIdx : parts.findIndex(p => /^\d号$/.test(String(p).trim()));
+                            const productColIdx = gtProductIdx >= 0 ? gtProductIdx : anyProductIdx;
+                            if (productColIdx >= 0 && parts[productColIdx + 1] != null && parts[productColIdx + 2] != null) {
+                                const idxV = productColIdx + 1, idxN = productColIdx + 2;
+                                const nameCell = String(parts[idxN]).trim();
+                                const valCell = String(parts[idxV]).replace(/,/g, '').replace(/[\s%]/g, '');
+                                const numVal = parseFloat(valCell);
+                                const skipNames = ['资金账号','产品名称','市值','名称','名 称','市 值','代码','持仓净值占比','可用持仓','持仓量','最新价','昨日持仓','在途','冻结','当日涨幅','盈亏','成本价','盈亏比例','状态'];
+                                if (nameCell && !/^[\d.%\s-]+$/.test(nameCell) && !skipNames.includes(nameCell) && !/^汇宽天翼\d号?$/.test(nameCell) && !isNaN(numVal) && numVal > 0) {
+                                    const prod = parseProductFromCell(parts[productColIdx]) || (String(parts[productColIdx]).match(/(\d号)/) || [])[1];
+                                    if (prod) currentProduct = prod;
+                                    stock = nameCell;
+                                    value = numVal >= 10000 ? numVal / 10000 : numVal;
+                                }
+                            }
+                        }
+                        if (!stock && isNaN(value) && parts.length >= 2 && !headerDetected) {
+                            if (['标的名称','股票名称','名称','持仓市值','市值'].includes(parts[0]) || ['持仓市值','市值'].includes(parts[1])) return;
+                            stock = parts[0];
+                            value = parseFloat(String(parts[1]).replace(/,/g, '').replace(/[^\d.-]/g, ''));
+                        }
+                    }
+                    // 格式2: 单行 股票名称 数字（未进入多列分支时）
+                    if (!stock && isNaN(value)) {
+                        const stockMatch = line.match(/^([\u4e00-\u9fa5A-Za-z0-9]+)\s+([\d.,]+)/);
+                        if (stockMatch) {
+                            stock = stockMatch[1];
+                            value = parseFloat(stockMatch[2].replace(/,/g, ''));
+                        }
+                    }
+                    if (!stock && isNaN(value)) {
+                        const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9]+)\s+([\d.,]+)\s*万?/);
+                        if (m) { stock = m[1]; value = parseFloat(m[2].replace(/,/g, '')); }
+                    }
+
+                    if (stock && !isNaN(value) && value > 0) {
+                        if (stock === '合计' || stock === '现金' || /^产品\d*$/.test(stock) || /^汇宽天翼\d号?$/.test(stock)) return;
+                        const preset = getStoredStockPreset(stock);
+                        holdings.push({
+                            product: currentProduct,
+                            stock: stock,
+                            value: value,
+                            category: (preset && preset.category) ? preset.category : (categoryMap[stock] || 'A股资源'),
+                            exchange: exchangeCell || '',
+                            marketOverride: (preset && preset.market) ? preset.market : undefined
+                        });
+                    }
+                });
+
+                if (holdings.length === 0) console.warn('解析到 0 条持仓。行数:', lines.length, '| 文本长度:', text.length, '| 前800字:', text.slice(0, 800));
+
+            } catch (error) {
+                console.error('解析OCR结果失败:', error);
+            }
+
+            return holdings;
+        }
+
+        // ================================================================
+        // 行业分类与市场（含手动预设持久化）
+        // ================================================================
+
+        const PRESET_STORAGE_KEY = 'portfolio-stock-presets';
+
+        /** 读取某只股票的记忆：{ market, category }，无则 null */
+        function getStoredStockPreset(stock) {
+            try {
+                const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+                if (!raw) return null;
+                const obj = JSON.parse(raw);
+                return obj[String(stock).trim()] || null;
+            } catch (e) { return null; }
+        }
+
+        /** 更新某只股票的记忆（只更新传入的字段，其余保留） */
+        function setStoredStockPreset(stock, partial) {
+            const key = String(stock).trim();
+            if (!key) return;
+            try {
+                const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+                const obj = raw ? JSON.parse(raw) : {};
+                obj[key] = { ...(obj[key] || {}), ...partial };
+                localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(obj));
+            } catch (e) { console.warn('保存预设失败', e); }
+        }
+
+        /**
+         * 市场显示值：优先用手动覆盖，否则按交易所/名称推断
+         */
+        function getMarket(h) {
+            if (h.marketOverride) return h.marketOverride;
+            const ex = (h.exchange || '').trim();
+            if (ex && /港交所|港股|香港/.test(ex)) return '港股';
+            if (ex && /纳交所|纽交所|美股|美国/.test(ex)) return '美股';
+            const s = (h.stock || '').trim();
+            if (/\.HK$|港股|香港/.test(s)) return '港股';
+            if (/^[A-Za-z0-9.]{2,12}$/.test(s)) return '美股';
+            return 'A股';
+        }
+
         /**
          * 股票名称 → 行业分类 映射表
          * 用于自动识别股票所属行业
@@ -472,9 +990,11 @@
             '半导体三倍做多': '美国半导体', 
             'SOXL': '美国半导体', 
             '英特尔': '美国半导体',
+            'Direxion Daily Sem': '美国半导体',
             
             // 美国算力
             'Lumentum控股': '美国算力',
+            'LUMENTUM': '美国算力',
             
             // A股半导体
             '半导体设备ETF': 'A股半导体', 
@@ -504,7 +1024,8 @@
             
             // 互联网
             '谷歌A': '互联网', 
-            'GGLL': '互联网'
+            'GGLL': '互联网',
+            '2倍做多GOOGL-Di': '互联网'
         };
         
         /**
@@ -520,44 +1041,43 @@
         // ================================================================
         // 图片上传与预览功能
         // ================================================================
-        
+
         /**
-         * 处理图片上传
-         * @param {Event} e - 文件输入事件
-         * @param {string} type - 上传类型 ('gt' 或 'trs')
+         * 处理图片上传（包装函数）
          */
-        function handleUpload(e, type) {
+        function handleUploadAsync(e) {
+            handleUpload(e).catch(error => {
+                console.error('上传失败:', error);
+                alert('图片上传失败，请重试');
+            });
+        }
+
+        /**
+         * 处理图片上传（统一入口：GT/TRS 截图均可，识别时按表头自动分辨）
+         */
+        async function handleUpload(e) {
             const files = e.target.files;
-            const grid = document.getElementById(type + 'Grid');
-            const arr = type === 'gt' ? gtImages : trsImages;
-            
-            // 清空之前的图片
-            arr.length = 0;
+            const grid = document.getElementById('screenshotGrid');
+
+            screenshotImages.length = 0;
             grid.innerHTML = '';
-            
-            // 遍历上传的每个文件
+
             for (let f of files) {
-                const reader = new FileReader();
-                
-                reader.onload = function(ev) {
-                    // 保存图片数据
-                    arr.push({ name: f.name, src: ev.target.result });
-                    
-                    // 创建预览元素
-                    const div = document.createElement('div');
-                    div.className = 'image-item';
-                    div.innerHTML = `
-                        <img src="${ev.target.result}" onclick="openViewer('${ev.target.result.replace(/'/g, "\\'")}')">
-                        <div class="name">${f.name}</div>
-                    `;
-                    grid.appendChild(div);
-                };
-                
-                // 以 DataURL 格式读取文件
-                reader.readAsDataURL(f);
+                const result = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = ev => resolve(ev.target.result);
+                    reader.onerror = err => reject(err);
+                    reader.readAsDataURL(f);
+                });
+                screenshotImages.push({ name: f.name, src: result });
+                const div = document.createElement('div');
+                div.className = 'image-item';
+                div.innerHTML = `
+                    <img src="${result}" onclick="openViewer('${result.replace(/'/g, "\\'")}')">
+                    <div class="name">${f.name}</div>
+                `;
+                grid.appendChild(div);
             }
-            
-            // 更新步骤指示器状态
             updateSteps();
         }
 
@@ -622,6 +1142,8 @@
             document.getElementById('totalCash').textContent = totalCash.toFixed(2);
             document.getElementById('stockCount').textContent = holdings.length;
             
+            // 渲染市场占比饼图
+            renderMarketPie(totalAssets);
             // 渲染行业占比分析
             renderIndustry(totalAssets);
             
@@ -632,31 +1154,71 @@
             updateSteps();
         }
 
+        /** 行业柱状图配色（按顺序循环使用，深色醒目） */
+        const INDUSTRY_PALETTE = [
+            'linear-gradient(90deg, #2563eb, #1d4ed8)',
+            'linear-gradient(90deg, #dc2626, #b91c1c)',
+            'linear-gradient(90deg, #059669, #047857)',
+            'linear-gradient(90deg, #7c3aed, #6d28d9)',
+            'linear-gradient(90deg, #ea580c, #c2410c)',
+            'linear-gradient(90deg, #0891b2, #0e7490)',
+            'linear-gradient(90deg, #ca8a04, #a16207)',
+            'linear-gradient(90deg, #0d9488, #0f766e)',
+            'linear-gradient(90deg, #db2777, #be185d)',
+            'linear-gradient(90deg, #4f46e5, #4338ca)'
+        ];
+
+        /**
+         * 渲染市场占比饼图（A股 / 港股 / 美股）
+         */
+        function renderMarketPie(totalAssets) {
+            const marketTotals = { 'A股': 0, '港股': 0, '美股': 0 };
+            holdings.forEach(h => {
+                const m = getMarket(h);
+                if (marketTotals[m] !== undefined) marketTotals[m] += h.value;
+            });
+            const totalMarket = marketTotals['A股'] + marketTotals['港股'] + marketTotals['美股'];
+            const cash = getTotalCash();
+            const total = totalMarket + cash;
+            const pctA = total > 0 ? (marketTotals['A股'] / total * 100) : 0;
+            const pctH = total > 0 ? (marketTotals['港股'] / total * 100) : 0;
+            const pctU = total > 0 ? (marketTotals['美股'] / total * 100) : 0;
+            const colors = { 'A股': '#22c55e', '港股': '#3b82f6', '美股': '#f59e0b' };
+            let conic = '';
+            let acc = 0;
+            [['A股', pctA], ['港股', pctH], ['美股', pctU]].forEach(([name, p]) => {
+                if (p > 0) { conic += `${colors[name]} ${acc}% ${acc + p}%, `; acc += p; }
+            });
+            conic = conic ? conic.slice(0, -2) : '#e2e8f0 0% 100%';
+            const html = `
+                <div class="market-pie-chart" style="background: conic-gradient(${conic});"></div>
+                <div class="market-pie-legend">
+                    <span><i class="dot" style="background:#22c55e;"></i> A股：${marketTotals['A股'].toFixed(2)}万 (${pctA.toFixed(1)}%)</span>
+                    <span><i class="dot" style="background:#3b82f6;"></i> 港股：${marketTotals['港股'].toFixed(2)}万 (${pctH.toFixed(1)}%)</span>
+                    <span><i class="dot" style="background:#f59e0b;"></i> 美股：${marketTotals['美股'].toFixed(2)}万 (${pctU.toFixed(1)}%)</span>
+                </div>
+            `;
+            document.getElementById('marketPieWrap').innerHTML = html;
+        }
+
         /**
          * 渲染行业占比分析
-         * 包括柱状图和明细表格
+         * 包括柱状图和明细表格；行业条使用统一深色配色，更醒目
          * @param {number} totalAssets - 总资产（万元）
          */
         function renderIndustry(totalAssets) {
-            // 按行业汇总市值
             const indMap = {};
             holdings.forEach(h => {
                 if (!indMap[h.category]) indMap[h.category] = 0;
                 indMap[h.category] += h.value;
             });
-            
-            // 添加现金项
             indMap['现金'] = getTotalCash();
-            
-            // 按市值降序排序
             const sorted = Object.entries(indMap).sort((a, b) => b[1] - a[1]);
             
-            // ===== 渲染柱状图 =====
             let barsHtml = '';
-            sorted.forEach(([ind, val]) => {
+            sorted.forEach(([ind, val], idx) => {
                 const pct = totalAssets > 0 ? (val / totalAssets * 100) : 0;
-                const colorClass = ind === '现金' ? '' : 'ind-' + ind;
-                
+                const bg = ind === '现金' ? 'linear-gradient(90deg, #94a3b8, #64748b)' : INDUSTRY_PALETTE[idx % INDUSTRY_PALETTE.length];
                 barsHtml += `
                     <div class="industry-bar">
                         <div class="label">
@@ -664,7 +1226,7 @@
                             <span>${val.toFixed(2)}万 (${pct.toFixed(2)}%)</span>
                         </div>
                         <div class="bar">
-                            <div class="fill ${colorClass}" style="width:${pct}%">
+                            <div class="fill" style="width:${pct}%; background:${bg};">
                                 ${pct > 5 ? pct.toFixed(1) + '%' : ''}
                             </div>
                         </div>
@@ -674,7 +1236,7 @@
             document.getElementById('industryBars').innerHTML = barsHtml;
             
             // ===== 渲染明细表格 =====
-            let tableHtml = '<table><tr><th>行业分类</th><th>市值(万)</th><th>占比</th></tr>';
+            let tableHtml = '<table><tr><th>行业分类</th><th>市值(万人民币)</th><th>占比</th></tr>';
             
             sorted.forEach(([ind, val]) => {
                 const pct = totalAssets > 0 ? (val / totalAssets * 100) : 0;
@@ -717,64 +1279,88 @@
         }
 
         /**
+         * 用户修改行业分类后：同步到 holdings、写入预设并刷新
+         */
+        function onCategoryChange(inputEl) {
+            const stock = inputEl.getAttribute('data-stock');
+            const newCat = (inputEl.value || '').trim();
+            holdings.filter(h => h.stock === stock).forEach(h => { h.category = newCat || h.category; });
+            const one = holdings.find(h => h.stock === stock);
+            if (one) setStoredStockPreset(stock, { category: newCat || one.category, market: getMarket(one) });
+            calculate();
+        }
+
+        /**
+         * 用户修改市场后：同步到 holdings、写入预设并刷新
+         */
+        function onMarketChange(selectEl) {
+            const stock = selectEl.getAttribute('data-stock');
+            const newMarket = (selectEl.value || '').trim();
+            if (!newMarket) return;
+            holdings.filter(h => h.stock === stock).forEach(h => { h.marketOverride = newMarket; });
+            const one = holdings.find(h => h.stock === stock);
+            if (one) setStoredStockPreset(stock, { market: newMarket, category: one.category });
+            calculate();
+        }
+
+        /**
          * 渲染持仓明细表格
-         * 根据当前选中的标签页过滤数据
+         * 市场为可编辑下拉（A股/港股/美股）；行业分类为可编辑输入框；修改会写入预设供下次自动应用
          */
         function renderTable() {
-            // 根据当前标签页过滤数据
             let filtered = currentTab === 'all' 
                 ? [...holdings] 
                 : holdings.filter(h => h.product === currentTab);
             
-            // 如果是全部汇总，合并同名股票
             if (currentTab === 'all') {
                 const merged = {};
                 filtered.forEach(h => {
                     if (!merged[h.stock]) {
-                        merged[h.stock] = { stock: h.stock, value: 0, category: h.category };
+                        merged[h.stock] = { stock: h.stock, value: 0, category: h.category, exchange: h.exchange, marketOverride: h.marketOverride };
                     }
                     merged[h.stock].value += h.value;
                 });
                 filtered = Object.values(merged);
             }
             
-            // 计算当前视图的现金和总资产
             const cash = currentTab === 'all' ? getTotalCash() : getCash(currentTab);
             const totalMarket = filtered.reduce((sum, h) => sum + h.value, 0);
             const totalAsset = totalMarket + cash;
             
-            // 构建表格HTML
-            let html = '<table><tr><th>股票名称</th><th>市值(万)</th><th>占比</th><th>行业分类</th></tr>';
+            const escapeAttr = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
             
-            // 按市值降序排列持仓
+            let html = '<table><tr><th>股票名称</th><th>市值(万人民币)</th><th>占比</th><th>市场</th><th>行业分类</th></tr>';
+            
+            const marketOptions = ['A股', '港股', '美股'];
             filtered.sort((a, b) => b.value - a.value).forEach(h => {
                 const pct = totalAsset > 0 ? (h.value / totalAsset * 100).toFixed(2) : 0;
-html += `
+                const market = getMarket(h);
+                const selHtml = marketOptions.map(m => `<option value="${escapeAttr(m)}"${m === market ? ' selected' : ''}>${escapeAttr(m)}</option>`).join('');
+                const sel = `<select class="market-select" data-stock="${escapeAttr(h.stock)}" onchange="onMarketChange(this)">${selHtml}</select>`;
+                html += `
                     <tr>
-                        <td>${h.stock}</td>
+                        <td>${escapeAttr(h.stock)}</td>
                         <td>${h.value.toFixed(2)}</td>
                         <td>${pct}%</td>
-                        <td><span class="cat-tag cat-${h.category}">${h.category}</span></td>
+                        <td>${sel}</td>
+                        <td><input type="text" class="category-input" value="${escapeAttr(h.category)}" data-stock="${escapeAttr(h.stock)}" onchange="onCategoryChange(this)" placeholder="可修改" /></td>
                     </tr>
                 `;
             });
             
-            // 添加现金行
             html += `
                 <tr style="background:#ebf8ff;">
                     <td>现金</td>
                     <td>${cash.toFixed(2)}</td>
                     <td>${totalAsset > 0 ? (cash / totalAsset * 100).toFixed(2) : 0}%</td>
                     <td>-</td>
+                    <td>-</td>
                 </tr>
-            `;
-            
-            // 添加合计行
-            html += `
                 <tr style="font-weight:bold;background:#f0fff4;">
                     <td>合计</td>
                     <td>${totalAsset.toFixed(2)}</td>
                     <td>100%</td>
+                    <td>-</td>
                     <td>-</td>
                 </tr>
             </table>`;
@@ -787,7 +1373,7 @@ html += `
          * 根据当前进度高亮对应步骤
          */
         function updateSteps() {
-            const hasImg = gtImages.length > 0 || trsImages.length > 0;
+            const hasImg = screenshotImages.length > 0;
             const hasData = holdings.length > 0;
             
             // 设置各步骤的状态
@@ -835,14 +1421,11 @@ html += `
                         const stock = cols[1].trim();         // 股票名称
                         const value = parseFloat(cols[2]);    // 市值
                         
-                        // 获取行业分类（优先使用CSV中的分类，否则从映射表查找）
-                        let category = cols.length > 4 
-                            ? cols[4].trim() 
-                            : (categoryMap[stock] || 'A股资源');
-                        
-                        // 排除现金和合计行
+                        const preset = getStoredStockPreset(stock);
+                        let category = (preset && preset.category) ? preset.category : (cols.length > 4 ? cols[4].trim() : (categoryMap[stock] || 'A股资源'));
+                        const marketOverride = (preset && preset.market) ? preset.market : undefined;
                         if (stock !== '现金' && !stock.includes('合计')) {
-                            holdings.push({ product, stock, value, category });
+                            holdings.push({ product, stock, value, category, marketOverride });
                         }
                     }
                 }
@@ -854,96 +1437,6 @@ html += `
             
             // 以UTF-8编码读取文件
             reader.readAsText(file, 'UTF-8');
-        }
-
-        // ================================================================
-        // 示例数据加载
-        // ================================================================
-        
-        /**
-         * 加载预设的示例数据
-         * 用于演示和测试功能
-         */
-        function loadSample() {
-            holdings = [
-                // ===== 1号产品持仓 =====
-                { product:'1号', stock:'万里石', value:4115.10, category:'A股资源' },
-                { product:'1号', stock:'力勤资源', value:1347.12, category:'港股资源' },
-                { product:'1号', stock:'中际旭创', value:1120.66, category:'A股算力' },
-                { product:'1号', stock:'中芯国际', value:1052.87, category:'港股FAB' },
-                { product:'1号', stock:'半导体三倍做多', value:992.66, category:'美国半导体' },
-                { product:'1号', stock:'半导体设备ETF', value:990.14, category:'A股半导体' },
-                { product:'1号', stock:'盛屯矿业', value:782.13, category:'A股资源' },
-                { product:'1号', stock:'润泽科技', value:703.04, category:'A股算力' },
-                { product:'1号', stock:'GGLL', value:623.70, category:'互联网' },
-                { product:'1号', stock:'胜宏科技', value:616.01, category:'A股算力' },
-                { product:'1号', stock:'华联控股', value:551.52, category:'A股资源' },
-                { product:'1号', stock:'新易盛', value:475.98, category:'A股算力' },
-                { product:'1号', stock:'Lumentum控股', value:397.78, category:'美国算力' },
-                { product:'1号', stock:'先导智能', value:372.96, category:'A股锂电光伏' },
-                { product:'1号', stock:'中核国际', value:280.45, category:'港股资源' },
-                { product:'1号', stock:'中微公司', value:262.81, category:'A股半导体' },
-                { product:'1号', stock:'谷歌A', value:19.70, category:'互联网' },
-                
-                // ===== 2号产品持仓 =====
-                { product:'2号', stock:'万里石', value:1940.56, category:'A股资源' },
-                { product:'2号', stock:'胜宏科技', value:477.61, category:'A股算力' },
-                { product:'2号', stock:'中际旭创', value:464.11, category:'A股算力' },
-                { product:'2号', stock:'盛屯矿业', value:433.58, category:'A股资源' },
-                { product:'2号', stock:'华联控股', value:410.57, category:'A股资源' },
-                { product:'2号', stock:'力勤资源', value:388.47, category:'港股资源' },
-                { product:'2号', stock:'中芯国际', value:387.41, category:'港股FAB' },
-                { product:'2号', stock:'中微公司', value:383.58, category:'A股半导体' },
-                { product:'2号', stock:'润泽科技', value:364.91, category:'A股算力' },
-                { product:'2号', stock:'半导体三倍做多', value:321.94, category:'美国半导体' },
-                { product:'2号', stock:'GGLL', value:283.18, category:'互联网' },
-                { product:'2号', stock:'新易盛', value:280.91, category:'A股算力' },
-                { product:'2号', stock:'杰瑞股份', value:252.60, category:'A股资源' },
-                { product:'2号', stock:'先导智能', value:187.95, category:'A股锂电光伏' },
-                { product:'2号', stock:'Lumentum控股', value:184.97, category:'美国算力' },
-                { product:'2号', stock:'中核国际', value:24.07, category:'港股资源' },
-                
-                // ===== 5号产品持仓 =====
-                { product:'5号', stock:'万里石', value:945.45, category:'A股资源' },
-                { product:'5号', stock:'中际旭创', value:237.72, category:'A股算力' },
-                { product:'5号', stock:'谷歌A', value:215.39, category:'互联网' },
-                { product:'5号', stock:'中芯国际', value:199.95, category:'港股FAB' },
-                { product:'5号', stock:'半导体设备ETF', value:191.48, category:'A股半导体' },
-                { product:'5号', stock:'华联控股', value:150.74, category:'A股资源' },
-                { product:'5号', stock:'润泽科技', value:137.70, category:'A股算力' },
-                { product:'5号', stock:'盛屯矿业', value:132.23, category:'A股资源' },
-                { product:'5号', stock:'半导体三倍做多', value:129.20, category:'美国半导体' },
-                { product:'5号', stock:'杰瑞股份', value:118.93, category:'A股资源' },
-                { product:'5号', stock:'英特尔', value:116.98, category:'美国半导体' },
-                { product:'5号', stock:'新易盛', value:109.24, category:'A股算力' },
-                { product:'5号', stock:'Lumentum控股', value:106.12, category:'美国算力' },
-                { product:'5号', stock:'胜宏科技', value:92.27, category:'A股算力' },
-                { product:'5号', stock:'先导智能', value:73.19, category:'A股锂电光伏' },
-                { product:'5号', stock:'中微公司', value:66.83, category:'A股半导体' },
-                { product:'5号', stock:'中核国际', value:51.48, category:'港股资源' },
-                
-                // ===== 6号产品持仓 =====
-                { product:'6号', stock:'万里石', value:274.09, category:'A股资源' },
-                { product:'6号', stock:'中际旭创', value:62.26, category:'A股算力' },
-                { product:'6号', stock:'中芯国际', value:56.24, category:'港股FAB' },
-                { product:'6号', stock:'半导体设备ETF', value:55.46, category:'A股半导体' },
-                { product:'6号', stock:'盛屯矿业', value:47.83, category:'A股资源' },
-                { product:'6号', stock:'华联控股', value:44.18, category:'A股资源' },
-                { product:'6号', stock:'润泽科技', value:39.78, category:'A股算力' },
-                { product:'6号', stock:'杰瑞股份', value:34.11, category:'A股资源' },
-                { product:'6号', stock:'英特尔', value:33.88, category:'美国半导体' },
-                { product:'6号', stock:'半导体三倍做多', value:32.84, category:'美国半导体' },
-                { product:'6号', stock:'谷歌A', value:27.81, category:'互联网' },
-                { product:'6号', stock:'胜宏科技', value:27.14, category:'A股算力' },
-                { product:'6号', stock:'新易盛', value:27.31, category:'A股算力' },
-                { product:'6号', stock:'Lumentum控股', value:25.72, category:'美国算力' },
-                { product:'6号', stock:'先导智能', value:21.66, category:'A股锂电光伏' },
-                { product:'6号', stock:'中核国际', value:19.03, category:'港股资源' }
-            ];
-            
-            // 重新计算并渲染
-            calculate();
-            alert('示例数据加载成功！');
         }
 
         // ================================================================
@@ -976,7 +1469,7 @@ html += `
                     data.push({
                         '产品': p, 
                         '股票名称': h.stock, 
-                        '市值(万元)': h.value, 
+                        '市值(万元人民币)': h.value, 
                         '占比': (h.value / total * 100).toFixed(2) + '%', 
                         '行业分类': h.category
                     });
@@ -986,7 +1479,7 @@ html += `
                 data.push({
                     '产品': p, 
                     '股票名称': '现金', 
-                    '市值(万元)': cash, 
+                    '市值(万元人民币)': cash, 
                     '占比': (cash / total * 100).toFixed(2) + '%', 
                     '行业分类': '-'
                 });
@@ -995,7 +1488,7 @@ html += `
                 data.push({
                     '产品': p, 
                     '股票名称': '【合计】', 
-                    '市值(万元)': total, 
+                    '市值(万元人民币)': total, 
                     '占比': '100%', 
                     '行业分类': '-'
                 });
@@ -1004,7 +1497,7 @@ html += `
                 data.push({
                     '产品': '', 
                     '股票名称': '', 
-                    '市值(万元)': '', 
+                    '市值(万元人民币)': '', 
                     '占比': '', 
                     '行业分类': ''
                 });
@@ -1014,7 +1507,7 @@ html += `
             data.push({
                 '产品': '【行业汇总】', 
                 '股票名称': '', 
-                '市值(万元)': '', 
+                '市值(万元人民币)': '', 
                 '占比': '', 
                 '行业分类': ''
             });
@@ -1033,7 +1526,7 @@ html += `
                 data.push({
                     '产品': '', 
                     '股票名称': ind, 
-                    '市值(万元)': val, 
+                    '市值(万元人民币)': val, 
                     '占比': (val / totalAssets * 100).toFixed(2) + '%', 
                     '行业分类': ''
                 });
@@ -1063,7 +1556,7 @@ html += `
         // ================================================================
         // 页面初始化
         // ================================================================
-        
+        toggleOcrKeyBlocks();
         // 页面加载完成后执行初始计算
         calculate();
     </script>

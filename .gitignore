@@ -1,0 +1,6 @@
+node_modules/
+*.exe
+*.xlsx
+~$*
+.DS_Store
+.env
